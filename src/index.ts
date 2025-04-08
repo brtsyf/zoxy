@@ -1,4 +1,4 @@
 import { create, useStore } from './main';
-import { Middleware } from './middleware';
+import middleware from './middleware';
 
-export { create, useStore, Middleware };
+export { create, useStore, middleware };

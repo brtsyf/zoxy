@@ -1,13 +1,20 @@
 {
-  "name": "zoxy",
+  "name": "@seyfoo/zoxy",
   "version": "1.0.0",
   "description": "A modern React library for building interactive user interfaces",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
     "test": "jest",
-    "start": "tsc --watch && node dist/src/index.js",
-    "build": "tsc",
+    "start": "tsc --watch && node dist/index.js",
+    "build": "tsup src/index.ts --format cjs,esm --clean",
+    "build:dts": "tsup src/index.ts --format cjs,esm --dts --clean",
     "prepare": "npm run build"
   },
   "keywords": [

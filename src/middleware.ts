@@ -38,5 +38,4 @@ class MiddlewareManager<T, K extends Record<string, ActionFunction<T>>> {
     this.middlewares.push(middleware);
   }
 }
-
 export default MiddlewareManager;
