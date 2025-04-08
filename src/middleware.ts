@@ -14,7 +14,7 @@ class MiddlewareManager<T, K extends Record<string, ActionFunction<T>>> {
   }
 
   public async applyMiddleware(
-    store: create<T, any>,
+    store: create<T, K>,
     action: WrappedActionsTypePromise<K>
   ) {
     let nextCalled = false;
@@ -23,11 +23,11 @@ class MiddlewareManager<T, K extends Record<string, ActionFunction<T>>> {
     };
     for (const middleware of this.middlewares) {
       const result = middleware(store, next, action);
-      // Eğer async bir işlem varsa bekle
+
       if (result instanceof Promise) {
         await result;
       }
-      // next çağrıldıysa, diğer middleware'lara geçme
+
       if (nextCalled) {
         return;
       }

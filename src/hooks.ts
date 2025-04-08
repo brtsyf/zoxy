@@ -16,8 +16,8 @@ class History<T, K extends Record<string, ActionFunction<T>>> {
   }
 
   public saveState() {
-    this.history.push({ ...this.store.getState() }); // State'in bir kopyasını al
-    this.future = []; // Yeni işlem yapıldığında redo geçmişini temizle
+    this.history.push({ ...this.store.getState() });
+    this.future = [];
   }
 
   public async undo() {

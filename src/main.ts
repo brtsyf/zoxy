@@ -36,7 +36,6 @@ class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
           action as WrappedActionsTypePromise<K>
         );
         if (this.hooks.isAsync(fn)) {
-          // For async actions, we need to handle the Promise
           const promise = (async () => {
             await (fn as any)(this.state, ...params);
             this.setState(this.state);
@@ -45,7 +44,7 @@ class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
           })();
           return promise;
         }
-        // Handle sync actions
+
         const newState = produce(this.state, (draft: T) => {
           fn(draft, ...params);
         });
@@ -62,7 +61,7 @@ class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
 
   public subscribe(callback: (state: T) => void) {
     this.subscribers.add(callback);
-    callback(this.state); // İlk abone olduğunda state'i hemen ver
+    callback(this.state);
     return () => this.unsubscribe(callback);
   }
 

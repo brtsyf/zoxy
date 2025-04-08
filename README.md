@@ -55,6 +55,17 @@ npm start
 yarn start
 ```
 
+### Building | Derleme
+
+To build the project:
+Projeyi derlemek için:
+
+```bash
+npm run build
+# or
+yarn build
+```
+
 ### Testing | Test
 
 To run tests:
@@ -65,6 +76,147 @@ npm test
 # or
 yarn test
 ```
+
+## 📚 Detailed Usage | Detaylı Kullanım
+
+### State Management | Durum Yönetimi
+
+The library provides a simple state management solution with middleware support. Here's how to use it:
+
+Kütüphane, middleware desteği ile basit bir durum yönetimi çözümü sunar. İşte nasıl kullanılacağı:
+
+```typescript
+// Import the necessary types and functions
+// Gerekli tipleri ve fonksiyonları içe aktarın
+import { create } from 'zoxy';
+import { Middleware } from 'zoxy/middleware';
+
+// Define your state type
+// Durum tipinizi tanımlayın
+type State = {
+  counter: number;
+  user: {
+    name: string;
+    age: number;
+  };
+};
+
+// Define your actions
+// Aksiyonlarınızı tanımlayın
+type Actions = {
+  increment: (state: State, amount: number) => void;
+  decrement: (state: State) => void;
+  updateUser: (state: State, name: string, age: number) => void;
+  getHistory: (state: State) => void;
+};
+
+// Create a middleware for logging
+// Loglama için middleware oluşturun
+const loggerMiddleware: Middleware<State, Actions> = async (
+  store,
+  next,
+  action
+) => {
+  console.log('Action Started');
+  const start = Date.now();
+  await next(action);
+  console.log('Action completed in:', Date.now() - start, 'ms');
+};
+
+// Create your store
+// Store'unuzu oluşturun
+export const store = new create<State, Actions>(
+  // Initial state
+  // Başlangıç durumu
+  {
+    counter: 0,
+    user: {
+      name: 'John',
+      age: 25,
+    },
+  },
+  // Actions
+  // Aksiyonlar
+  {
+    increment: (state, amount) => {
+      state.counter += amount;
+    },
+    decrement: (state) => {
+      state.counter -= 1;
+    },
+    updateUser: (state, name, age) => {
+      state.user.name = name;
+      state.user.age = age;
+    },
+    getHistory: (state) => {
+      console.log('State history:', store.historyManager.history);
+    },
+  },
+  // Middlewares
+  // Middleware'ler
+  [loggerMiddleware]
+);
+
+// Usage examples
+// Kullanım örnekleri
+
+// Increment counter by 5
+// Sayaç değerini 5 artır
+store.actions.increment(5);
+
+// Decrement counter
+// Sayaç değerini azalt
+store.actions.decrement();
+
+// Update user information
+// Kullanıcı bilgilerini güncelle
+store.actions.updateUser('Ahmet', 30);
+
+// Check state history
+// Durum geçmişini kontrol et
+store.actions.getHistory();
+
+// Export actions for use in components
+// Bileşenlerde kullanmak için aksiyonları dışa aktar
+export const { increment, decrement, updateUser } = store.actions;
+```
+
+### Key Features | Temel Özellikler
+
+1. **Type Safety | Tip Güvenliği**
+
+   - Full TypeScript support with strict type checking
+   - Katı tip kontrolü ile tam TypeScript desteği
+
+2. **Middleware Support | Middleware Desteği**
+
+   - Add custom middleware for:
+     - Logging
+     - Async operations
+     - Error handling
+     - Performance monitoring
+   - Özel middleware ekleyin:
+     - Loglama
+     - Asenkron işlemler
+     - Hata yönetimi
+     - Performans izleme
+
+3. **History Management | Geçmiş Yönetimi**
+
+   - Track and inspect state changes
+   - Debug state transitions
+   - Implement undo/redo functionality
+   - Durum değişikliklerini takip edin ve inceleyin
+   - Durum geçişlerini hata ayıklayın
+   - Geri alma/tekrar yapma işlevselliğini uygulayın
+
+4. **Immutable State Updates | Değişmez Durum Güncellemeleri**
+   - Safe state mutations
+   - Predictable state changes
+   - Easy debugging
+   - Güvenli durum değişiklikleri
+   - Öngörülebilir durum değişiklikleri
+   - Kolay hata ayıklama
 
 ## 📁 Project Structure | Proje Yapısı
 
