@@ -6,6 +6,11 @@ export type WrappedActionsType<K extends Record<string, ActionFunction<any>>> =
   {
     [P in keyof K]: (...args: OmitFirstParameter<K[P]>) => void;
   };
+export type WrappedActionsTypePromise<
+  K extends Record<string, ActionFunction<any>>,
+> = {
+  [P in keyof K]: (...args: OmitFirstParameter<K[P]>) => Promise<void>;
+};
 export type OmitFirstParameter<T extends (...args: any) => any> = T extends (
   state: any,
   ...args: infer P

@@ -1,24 +1,40 @@
 import { produce } from 'immer';
 import { useSyncExternalStore } from 'react';
-import { ActionFunction, OmitFirstParameter, WrappedActionsType } from './type';
+import {
+  ActionFunction,
+  OmitFirstParameter,
+  WrappedActionsType,
+  WrappedActionsTypePromise,
+} from './type';
+import MiddlewareManager, { Middleware } from './middleware';
+import { Hooks } from './hooks';
 class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
   private subscribers: Set<(state: T) => void>;
   private state: T;
-  public actions: WrappedActionsType<K>;
 
-  constructor(initialState: T, actions: K) {
+  private hooks: Hooks<T>;
+  public actions: WrappedActionsType<K>;
+  private middlewareManager: MiddlewareManager<T, K>;
+  constructor(initialState: T, actions: K, middlewares?: Middleware<T, K>[]) {
     this.state = initialState;
     this.subscribers = new Set();
     this.actions = this.createActions(actions);
+    this.middlewareManager = new MiddlewareManager<T, K>(middlewares);
+    this.hooks = new Hooks<T>();
   }
 
   private createActions(actions: K) {
     const wrappedActions = {} as WrappedActionsType<K>;
     Object.entries(actions).forEach(([name, fn]) => {
-      wrappedActions[name as keyof K] = (
+      wrappedActions[name as keyof K] = async (
         ...params: OmitFirstParameter<K[keyof K]>
       ) => {
-        if (this.isAsync(fn)) {
+        const action = { type: name, fn, params };
+        await this.middlewareManager.applyMiddleware(
+          this,
+          action as WrappedActionsTypePromise<K>
+        );
+        if (this.hooks.isAsync(fn)) {
           // For async actions, we need to handle the Promise
           const promise = (async () => {
             await (fn as any)(this.state, ...params);
@@ -45,10 +61,6 @@ class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
     this.subscribers.add(callback);
     callback(this.state); // İlk abone olduğunda state'i hemen ver
     return () => this.unsubscribe(callback);
-  }
-
-  private isAsync(fn: ActionFunction<T>) {
-    return fn.constructor.name === 'AsyncFunction';
   }
 
   private unsubscribe(callback: (state: T) => void) {
