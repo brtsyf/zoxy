@@ -7,11 +7,11 @@ import {
   WrappedActionsTypePromise,
 } from './type';
 import MiddlewareManager, { Middleware } from './middleware';
-import { Hooks } from './hooks';
+import { History, Hooks } from './hooks';
 class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
   private subscribers: Set<(state: T) => void>;
   private state: T;
-
+  public historyManager: History<T, K>;
   private hooks: Hooks<T>;
   public actions: WrappedActionsType<K>;
   private middlewareManager: MiddlewareManager<T, K>;
@@ -21,6 +21,7 @@ class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
     this.actions = this.createActions(actions);
     this.middlewareManager = new MiddlewareManager<T, K>(middlewares);
     this.hooks = new Hooks<T>();
+    this.historyManager = new History<T, K>(this);
   }
 
   private createActions(actions: K) {
@@ -39,6 +40,7 @@ class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
           const promise = (async () => {
             await (fn as any)(this.state, ...params);
             this.setState(this.state);
+            this.historyManager.saveState();
             return this.state;
           })();
           return promise;
@@ -48,6 +50,7 @@ class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
           fn(draft, ...params);
         });
         this.setState(newState);
+        this.historyManager.saveState();
       };
     });
     return wrappedActions;

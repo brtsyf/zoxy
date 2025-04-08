@@ -14,6 +14,7 @@ type Actions = {
     payload3: number
   ) => void;
   decrement: (state: State) => void;
+  checkHistory: (state: State) => void;
 };
 
 const loggerMiddleware: Middleware<State, Actions> = async (
@@ -23,21 +24,8 @@ const loggerMiddleware: Middleware<State, Actions> = async (
 ) => {
   await new Promise((resolve) => {
     setTimeout(() => {
-      console.log('Middleware 1');
       resolve(true);
-    }, 4000);
-  });
-};
-const loggerMiddleware2: Middleware<State, Actions> = async (
-  store,
-  next,
-  action
-) => {
-  await new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('Middleware 1');
-      resolve(true);
-    }, 4000);
+    }, 500);
   });
   next(action);
 };
@@ -45,27 +33,27 @@ const loggerMiddleware2: Middleware<State, Actions> = async (
 export const store = new create<State, Actions>(
   { count: 0, name: 'Ahmet' },
   {
-    increment: async (
+    increment: (
       state: State,
       payload: number,
       payload2: number,
       payload3: number
     ) => {
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          state.count += payload + payload2 + payload3;
-          console.log('Output ', state.count);
-          resolve(true);
-        }, 4000);
-      });
+      state.count += payload + payload2 + payload3;
+      console.log('Output ', state.count);
+    },
+    checkHistory: (state: State) => {
+      console.log(store.historyManager.history);
     },
     decrement: (state: State) => {
       state.count -= 1;
     },
   },
-  [loggerMiddleware, loggerMiddleware2]
+  [loggerMiddleware]
 );
 
 store.actions.increment(1000, 2000, 5000);
+store.actions.increment(1000, 2000, 5000);
+store.actions.checkHistory();
 
 export const { increment, decrement } = store.actions;
