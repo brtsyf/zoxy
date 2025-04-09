@@ -155,6 +155,7 @@ var createZoxy = class {
 var useZoxy = (store) => {
   return (0, import_react.useSyncExternalStore)(
     store.subscribe.bind(store),
+    store.getState.bind(store),
     store.getState.bind(store)
   );
 };

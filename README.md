@@ -88,7 +88,7 @@ Kütüphane, middleware desteği ile basit bir durum yönetimi çözümü sunar.
 ```typescript
 // Import the necessary types and functions
 // Gerekli tipleri ve fonksiyonları içe aktarın
-import { create } from 'zoxy';
+import { create, useStore } from 'zoxy';
 import { Middleware } from 'zoxy/middleware';
 
 // Define your state type
@@ -103,29 +103,43 @@ type State = {
 
 // Define your actions
 // Aksiyonlarınızı tanımlayın
-type Actions = {
-  increment: (state: State, amount: number) => void;
-  decrement: (state: State) => void;
-  updateUser: (state: State, name: string, age: number) => void;
-  getHistory: (state: State) => void;
+const actions = {
+  increment: (state: State, amount: number) => {
+    state.counter += amount;
+  },
+  decrement: (state: State) => {
+    state.counter -= 1;
+  },
+  updateUser: (state: State, name: string, age: number) => {
+    state.user.name = name;
+    state.user.age = age;
+  },
+  // Async action example
+  // Asenkron aksiyon örneği
+  fetchUserData: async (state: State, userId: string) => {
+    const response = await fetch(`https://api.example.com/users/${userId}`);
+    const userData = await response.json();
+    state.user.name = userData.name;
+    state.user.age = userData.age;
+  }
 };
 
 // Create a middleware for logging
 // Loglama için middleware oluşturun
-const loggerMiddleware: Middleware<State, Actions> = async (
+const loggerMiddleware: Middleware<State, typeof actions> = async (
   store,
   next,
   action
 ) => {
-  console.log('Action Started');
+  console.log(`Action Started: ${action.type}`, action.params);
   const start = Date.now();
   await next(action);
-  console.log('Action completed in:', Date.now() - start, 'ms');
+  console.log(`Action completed: ${action.type} in ${Date.now() - start}ms`);
 };
 
 // Create your store
 // Store'unuzu oluşturun
-export const store = new create<State, Actions>(
+export const store = new create<State, typeof actions>(
   // Initial state
   // Başlangıç durumu
   {
@@ -137,21 +151,7 @@ export const store = new create<State, Actions>(
   },
   // Actions
   // Aksiyonlar
-  {
-    increment: (state, amount) => {
-      state.counter += amount;
-    },
-    decrement: (state) => {
-      state.counter -= 1;
-    },
-    updateUser: (state, name, age) => {
-      state.user.name = name;
-      state.user.age = age;
-    },
-    getHistory: (state) => {
-      console.log('State history:', store.historyManager.history);
-    },
-  },
+  actions,
   // Middlewares
   // Middleware'ler
   [loggerMiddleware]
@@ -172,13 +172,32 @@ store.actions.decrement();
 // Kullanıcı bilgilerini güncelle
 store.actions.updateUser('Ahmet', 30);
 
-// Check state history
-// Durum geçmişini kontrol et
-store.actions.getHistory();
+// Use async action
+// Asenkron aksiyon kullanımı
+store.actions.fetchUserData('user123').then(() => {
+  console.log('User data fetched', store.getState().user);
+});
 
-// Export actions for use in components
-// Bileşenlerde kullanmak için aksiyonları dışa aktar
-export const { increment, decrement, updateUser } = store.actions;
+// History management (undo/redo)
+// Geçmiş yönetimi (geri alma/yineleme)
+store.historyManager.undo(); // Revert to the previous state
+store.historyManager.redo(); // Redo the undone action
+
+// React hook integration
+// React hook entegrasyonu
+function Counter() {
+  // Get the current state
+  // Mevcut durumu al
+  const state = useStore(store);
+
+  return (
+    <div>
+      <p>Count: {state.counter}</p>
+      <button onClick={() => store.actions.increment(1)}>Increment</button>
+      <button onClick={() => store.actions.decrement()}>Decrement</button>
+    </div>
+  );
+}
 ```
 
 ### Key Features | Temel Özellikler

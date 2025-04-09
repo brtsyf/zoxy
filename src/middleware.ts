@@ -1,8 +1,7 @@
-import { create } from './main';
 import { ActionFunction, WrappedActionsTypePromise } from './type';
 
 export type Middleware<T, K extends Record<string, ActionFunction<T>>> = (
-  store: create<T, K>,
+  store: any,
   next: (action: WrappedActionsTypePromise<K>) => Promise<void>,
   action: WrappedActionsTypePromise<K>
 ) => void | Promise<void>;
@@ -14,7 +13,7 @@ class MiddlewareManager<T, K extends Record<string, ActionFunction<T>>> {
   }
 
   public async applyMiddleware(
-    store: create<T, K>,
+    store: any,
     action: WrappedActionsTypePromise<K>
   ) {
     let nextCalled = false;

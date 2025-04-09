@@ -127,6 +127,7 @@ var createZoxy = class {
 var useZoxy = (store) => {
   return useSyncExternalStore(
     store.subscribe.bind(store),
+    store.getState.bind(store),
     store.getState.bind(store)
   );
 };

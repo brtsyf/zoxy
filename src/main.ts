@@ -82,6 +82,7 @@ class createZoxy<T, K extends Record<string, ActionFunction<T>>> {
 const useZoxy = <T>(store: createZoxy<T, any>) => {
   return useSyncExternalStore(
     store.subscribe.bind(store),
+    store.getState.bind(store),
     store.getState.bind(store)
   );
 };
