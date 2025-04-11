@@ -1,98 +1,195 @@
 # Zoxy
 
-A React-based application built with TypeScript.
-TypeScript ile geliştirilmiş React tabanlı bir uygulama.
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat&colorA=000000&colorB=000000)](https://github.com/brtsyf/zoxy)
+[![Bundle Size](https://img.shields.io/badge/bundle%20size-small-blue?style=flat&colorA=000000&colorB=000000)](https://github.com/brtsyf/zoxy)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue?style=flat&colorA=000000&colorB=000000)](https://github.com/brtsyf/zoxy)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-blue?style=flat&colorA=000000&colorB=000000)](https://www.typescriptlang.org/)
 
-## 🚀 Features | Özellikler
+A lightweight, type-safe state management library built with React and TypeScript. Simple but powerful, with no boilerplate.
 
-- React 19 with TypeScript
-- Jest for testing
-- Prettier for code formatting
-- Immer for immutable state management
+## 🌟 Highlights
 
-- React 19 ve TypeScript
-- Test için Jest
-- Kod formatlama için Prettier
-- Değişmez durum yönetimi için Immer
+- **Simple API** - Based on hooks, easy to learn and use
+- **TypeScript First** - Full type safety with minimal setup
+- **Middleware Support** - Logging, persistence, and more
+- **Immutable Updates** - Safe state mutations with Immer
+- **Minimal Re-renders** - Components update only when needed
+- **Zero Dependencies** - Tiny footprint, no extra baggage
 
-## 📋 Prerequisites | Gereksinimler
-
-- Node.js (Latest LTS version recommended)
-- npm or yarn package manager
-
-- Node.js (En son LTS sürümü önerilir)
-- npm veya yarn paket yöneticisi
-
-## 🛠️ Installation | Kurulum
-
-1. Clone the repository:
-   Depoyu klonlayın:
+## 📦 Installation
 
 ```bash
-git clone [your-repository-url]
-cd zoxy
-```
-
-2. Install dependencies:
-   Bağımlılıkları yükleyin:
-
-```bash
-npm install
+npm install @seyfoo/zoxy
 # or
-yarn install
+yarn add @seyfoo/zoxy
 ```
 
-## 🚀 Usage | Kullanım
+## 🚀 Quick Start
 
-### Development | Geliştirme
+### Create a store
 
-To start the development server:
-Geliştirme sunucusunu başlatmak için:
+```tsx
+import { create, useStore } from 'zoxy';
 
-```bash
-npm start
-# or
-yarn start
+// Define your state type
+type CountState = {
+  count: number;
+};
+
+// Define your actions
+const countActions = {
+  increment: (state: CountState) => {
+    state.count += 1;
+  },
+  decrement: (state: CountState) => {
+    state.count -= 1;
+  },
+  reset: (state: CountState) => {
+    state.count = 0;
+  },
+};
+
+// Create your store
+export const countStore = new create<CountState, typeof countActions>(
+  // Initial state
+  { count: 0 },
+  // Actions
+  countActions
+);
 ```
 
-### Building | Derleme
+### Use it in a component
 
-To build the project:
-Projeyi derlemek için:
+```tsx
+function Counter() {
+  // Get the current state using the useStore hook
+  const state = useStore(countStore);
 
-```bash
-npm run build
-# or
-yarn build
+  return (
+    <div>
+      <h1>{state.count}</h1>
+      <button onClick={() => countStore.actions.increment()}>+1</button>
+      <button onClick={() => countStore.actions.decrement()}>-1</button>
+      <button onClick={() => countStore.actions.reset()}>Reset</button>
+    </div>
+  );
+}
 ```
 
-### Testing | Test
+No providers needed! Just create stores and use them anywhere in your app.
 
-To run tests:
-Testleri çalıştırmak için:
+## 🧩 Advanced Usage
 
-```bash
-npm test
-# or
-yarn test
+### Async Actions
+
+```tsx
+import { create, useStore } from 'zoxy';
+
+type UserState = {
+  user: any;
+  loading: boolean;
+  error: any;
+};
+
+const userActions = {
+  setLoading: (state: UserState, isLoading: boolean) => {
+    state.loading = isLoading;
+  },
+  setError: (state: UserState, error: any) => {
+    state.error = error;
+  },
+  setUser: (state: UserState, user: any) => {
+    state.user = user;
+  },
+  fetchUser: async (state: UserState, id: string) => {
+    userStore.actions.setLoading(true);
+    userStore.actions.setError(null);
+    try {
+      const response = await fetch(`https://api.example.com/users/${id}`);
+      const user = await response.json();
+      userStore.actions.setUser(user);
+    } catch (error) {
+      userStore.actions.setError(error);
+    } finally {
+      userStore.actions.setLoading(false);
+    }
+  },
+};
+
+export const userStore = new create<UserState, typeof userActions>(
+  // Initial state
+  {
+    user: null,
+    loading: false,
+    error: null,
+  },
+  // Actions
+  userActions
+);
 ```
 
-## 📚 Detailed Usage | Detaylı Kullanım
+### Using Middleware
 
-### State Management | Durum Yönetimi
-
-The library provides a simple state management solution with middleware support. Here's how to use it:
-
-Kütüphane, middleware desteği ile basit bir durum yönetimi çözümü sunar. İşte nasıl kullanılacağı:
-
-```typescript
-// Import the necessary types and functions
-// Gerekli tipleri ve fonksiyonları içe aktarın
+```tsx
 import { create, useStore } from 'zoxy';
 import { Middleware } from 'zoxy/middleware';
 
-// Define your state type
-// Durum tipinizi tanımlayın
+// Define a logger middleware
+const loggerMiddleware: Middleware<
+  SettingsState,
+  typeof settingsActions
+> = async (store, next, action) => {
+  console.log(`Action Started: ${action.type}`, action.params);
+  const start = Date.now();
+  await next(action);
+  console.log(`Action completed: ${action.type} in ${Date.now() - start}ms`);
+};
+
+// Define a persistence middleware
+const persistMiddleware: Middleware<
+  SettingsState,
+  typeof settingsActions
+> = async (store, next, action) => {
+  await next(action);
+  // Save to localStorage after every action
+  localStorage.setItem('settings-storage', JSON.stringify(store.getState()));
+};
+
+type SettingsState = {
+  theme: string;
+  language: string;
+};
+
+const settingsActions = {
+  setTheme: (state: SettingsState, theme: string) => {
+    state.theme = theme;
+  },
+  setLanguage: (state: SettingsState, language: string) => {
+    state.language = language;
+  },
+};
+
+export const settingsStore = new create<SettingsState, typeof settingsActions>(
+  // Initial state
+  {
+    theme: 'light',
+    language: 'en',
+  },
+  // Actions
+  settingsActions,
+  // Middlewares
+  [loggerMiddleware, persistMiddleware]
+);
+```
+
+## 🔍 State Management Details
+
+### Store with TypeScript
+
+```typescript
+import { create, useStore } from 'zoxy';
+import { Middleware } from 'zoxy/middleware';
+
 type State = {
   counter: number;
   user: {
@@ -101,11 +198,9 @@ type State = {
   };
 };
 
-// Define your actions
-// Aksiyonlarınızı tanımlayın
 const actions = {
   increment: (state: State, amount: number) => {
-    state.counter += amount;
+    stat.counter += amount;
   },
   decrement: (state: State) => {
     state.counter -= 1;
@@ -114,18 +209,15 @@ const actions = {
     state.user.name = name;
     state.user.age = age;
   },
-  // Async action example
-  // Asenkron aksiyon örneği
   fetchUserData: async (state: State, userId: string) => {
     const response = await fetch(`https://api.example.com/users/${userId}`);
     const userData = await response.json();
     state.user.name = userData.name;
     state.user.age = userData.age;
-  }
+  },
 };
 
-// Create a middleware for logging
-// Loglama için middleware oluşturun
+// Create a logger middleware
 const loggerMiddleware: Middleware<State, typeof actions> = async (
   store,
   next,
@@ -138,10 +230,8 @@ const loggerMiddleware: Middleware<State, typeof actions> = async (
 };
 
 // Create your store
-// Store'unuzu oluşturun
 export const store = new create<State, typeof actions>(
   // Initial state
-  // Başlangıç durumu
   {
     counter: 0,
     user: {
@@ -150,140 +240,159 @@ export const store = new create<State, typeof actions>(
     },
   },
   // Actions
-  // Aksiyonlar
   actions,
   // Middlewares
-  // Middleware'ler
   [loggerMiddleware]
 );
 
 // Usage examples
-// Kullanım örnekleri
-
 // Increment counter by 5
-// Sayaç değerini 5 artır
 store.actions.increment(5);
-
 // Decrement counter
-// Sayaç değerini azalt
 store.actions.decrement();
-
 // Update user information
-// Kullanıcı bilgilerini güncelle
-store.actions.updateUser('Ahmet', 30);
-
+store.actions.updateUser('John', 30);
 // Use async action
-// Asenkron aksiyon kullanımı
 store.actions.fetchUserData('user123').then(() => {
   console.log('User data fetched', store.getState().user);
 });
+```
+
+### Middleware for Logging
+
+```typescript
+import { Middleware } from 'zoxy/middleware';
+
+// Create a middleware for logging
+const loggerMiddleware: Middleware<State, typeof actions> = async (
+  store,
+  next,
+  action
+) => {
+  console.log(`Action Started: ${action.type}`, action.params);
+  const start = Date.now();
+  await next(action);
+  console.log(`Action completed: ${action.type} in ${Date.now() - start}ms`);
+};
+```
+
+### History Management
+
+```typescript
+import { create, useStore } from 'zoxy';
+
+type State = {
+  counter: number;
+  text: string;
+};
+
+const actions = {
+  increment: (state: State) => {
+    state.counter += 1;
+  },
+  setText: (state: State, text: string) => {
+    state.text = text;
+  },
+};
+
+export const store = new create<State, typeof actions>(
+  { counter: 0, text: '' },
+  actions
+);
+
+// Usage examples
+store.actions.increment(); // counter = 1
+store.actions.setText('Hello'); // text = 'Hello'
 
 // History management (undo/redo)
-// Geçmiş yönetimi (geri alma/yineleme)
 store.historyManager.undo(); // Revert to the previous state
 store.historyManager.redo(); // Redo the undone action
 
-// React hook integration
-// React hook entegrasyonu
-function Counter() {
-  // Get the current state
-  // Mevcut durumu al
+// You can inspect the current state
+console.log(store.getState()); // After undo, counter = 0, text = ''
+```
+
+You can also use the history manager in React components:
+
+```tsx
+function HistoryControls() {
   const state = useStore(store);
 
   return (
     <div>
-      <p>Count: {state.counter}</p>
-      <button onClick={() => store.actions.increment(1)}>Increment</button>
-      <button onClick={() => store.actions.decrement()}>Decrement</button>
+      <p>Counter: {state.counter}</p>
+      <p>Text: {state.text}</p>
+      <button onClick={() => store.historyManager.undo()}>Undo</button>
+      <button onClick={() => store.historyManager.redo()}>Redo</button>
     </div>
   );
 }
 ```
 
-### Key Features | Temel Özellikler
+## 📋 Prerequisites
 
-1. **Type Safety | Tip Güvenliği**
+- Node.js (Latest LTS version recommended)
+- npm or yarn package manager
 
-   - Full TypeScript support with strict type checking
-   - Katı tip kontrolü ile tam TypeScript desteği
+## 🛠️ Development
 
-2. **Middleware Support | Middleware Desteği**
+```bash
+# Clone the repository
+git clone https://github.com/brtsyf/zoxy.git
+cd zoxy
 
-   - Add custom middleware for:
-     - Logging
-     - Async operations
-     - Error handling
-     - Performance monitoring
-   - Özel middleware ekleyin:
-     - Loglama
-     - Asenkron işlemler
-     - Hata yönetimi
-     - Performans izleme
+# Install dependencies
+npm install
+# or
+yarn install
 
-3. **History Management | Geçmiş Yönetimi**
+# Start development server
+npm start
+# or
+yarn start
 
-   - Track and inspect state changes
-   - Debug state transitions
-   - Implement undo/redo functionality
-   - Durum değişikliklerini takip edin ve inceleyin
-   - Durum geçişlerini hata ayıklayın
-   - Geri alma/tekrar yapma işlevselliğini uygulayın
+# Build for production
+npm run build
+# or
+yarn build
+```
 
-4. **Immutable State Updates | Değişmez Durum Güncellemeleri**
-   - Safe state mutations
-   - Predictable state changes
-   - Easy debugging
-   - Güvenli durum değişiklikleri
-   - Öngörülebilir durum değişiklikleri
-   - Kolay hata ayıklama
-
-## 📁 Project Structure | Proje Yapısı
+## 📁 Project Structure
 
 ```
 src/
-├── dist/          # Compiled output | Derlenmiş çıktı
-├── test/          # Test files | Test dosyaları
-├── hooks.ts       # Custom React hooks | Özel React hook'ları
-├── index.ts       # Entry point | Giriş noktası
-├── main.ts        # Main application logic | Ana uygulama mantığı
-├── middleware.ts  # Middleware functions | Middleware fonksiyonları
-└── type.d.ts      # TypeScript type definitions | TypeScript tip tanımlamaları
+├── dist/          # Compiled output
+├── hooks.ts       # Custom React hooks
+├── index.ts       # Entry point
+├── main.ts        # Main application logic
+├── middleware.ts  # Middleware functions
+└── type.d.ts      # TypeScript type definitions
 ```
 
-## 🧪 Testing | Test
+## 🤔 Why Zoxy?
 
-The project uses Jest and React Testing Library for testing. Tests can be found in the `src/test` directory.
-Proje, test için Jest ve React Testing Library kullanmaktadır. Testler `src/test` dizininde bulunabilir.
+### Why Zoxy over Redux?
 
-## 🔧 Configuration | Yapılandırma
+- **Simple and un-opinionated** - No boilerplate, no complex setup
+- **Hooks as primary API** - Makes state consumption natural in React
+- **No providers needed** - Use stores directly anywhere
+- **Predictable updates** - State is always immutable
 
-- `tsconfig.json` - TypeScript configuration | TypeScript yapılandırması
-- `jest.config.js` - Jest testing configuration | Jest test yapılandırması
-- `.prettierrc` - Prettier code formatting rules | Prettier kod formatlama kuralları
+### Why Zoxy over Context?
 
-## 📦 Dependencies | Bağımlılıklar
+- **Less boilerplate** - Create stores without wrapping providers
+- **Performance** - Updates only what's needed, not entire trees
+- **Centralized actions** - Keep business logic in one place
+- **Middleware support** - Add custom behaviors easily
 
-### Main Dependencies | Ana Bağımlılıklar
-
-- React 19
-- TypeScript
-- Immer
-
-### Dev Dependencies | Geliştirme Bağımlılıkları
-
-- Jest
-- Prettier
-- Testing Library
-
-## 📝 License | Lisans
+## 📝 License
 
 ISC License
-ISC Lisansı
 
-## 🤝 Contributing | Katkıda Bulunma
+## 🤝 Contributing
 
-1. Fork the repository | Depoyu çatallayın
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`) | Özellik dalınızı oluşturun
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`) | Değişikliklerinizi kaydedin
-4. Push to the branch (`git push origin feature/AmazingFeature`) | Dalı gönderin
-5. Open a Pull Request | Bir Pull Request açın
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request

@@ -5,7 +5,7 @@
     "jsx": "react",
     "module": "esnext",
     "moduleResolution": "node",
-    "types": ["jest", "@testing-library/jest-dom"],
+    "types": [],
     "declaration": true,
     "outDir": "./dist",
     "esModuleInterop": true,
@@ -13,5 +13,5 @@
     "strict": true
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": ["node_modules", "dist"]
 }
